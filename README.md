@@ -5,11 +5,13 @@ An interactive 3D and microscope-level simulation of various display technologie
 ## Features
 
 - **3D Exploded View**: Rotate and explode the physical layer stack of different TV technologies.
+- **Natural 16:9 Widescreen**: The interactive stack uses a native widescreen aspect ratio, perfectly reflecting the shape of real televisions.
+- **Physics-Based Angle Shifting**: Realistic simulation of contrast and color degradation when viewing LCD-based screens from off-center. OLED and CRT maintain perfect images, just like in real life.
 - **Microscope Mode**: Zoom 30,000x to see the actual subpixel arrangements (Triad, Stripe, Diamond, WRGB).
 - **Integrated Video Simulation**: Watch a reference video play directly on the front glass of the 3D model, affected by real-time technology-specific filters.
 - **Real-time Filters**: Simulate contrast, brightness, saturation, and blur characteristics for each technology.
 - **Ambient Lighting Simulation**: Adjust room lighting to see how different screens handle reflections and black levels.
-- **Fully Responsive**: Optimized for all screen sizes, from mobile phones to large desktops.
+- **Fully Responsive**: Optimized for all screen sizes and aspect ratios, with special cinematic scaling for 16:9 monitors.
 
 ## Display Technologies Included
 

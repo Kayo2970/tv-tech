@@ -11,6 +11,7 @@ interface Layer {
   thickness: number;
 }
 
+// Configuration for each display technology
 interface TechDetails {
   id: DisplayTech;
   name: string;
@@ -19,7 +20,10 @@ interface TechDetails {
   pixelPattern: 'TRIAD' | 'STRIPE' | 'DIAMOND' | 'WRGB';
   pros: string[];
   cons: string[];
-  angleShift: number; // 0 (none) to 2 (extreme shift)
+  // angleShift: Coefficient simulating how much color/contrast degrades at off-angles.
+  // Values: 0 (Perfect/OLED) to 2 (Extreme/Old LCD)
+  angleShift: number; 
+  // Base CSS filters applied to the reference video to simulate tech characteristics
   filters: {
     contrast: number;
     brightness: number;
@@ -44,7 +48,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Excellent Contrast', 'Zero Motion Blur'],
     cons: ['Huge & Heavy', 'Flicker', 'Radiation'],
-    angleShift: 0.1,
+    angleShift: 0.1, // CRT has excellent viewing angles due to phosphor emission
     filters: { contrast: 1.4, brightness: 0.8, saturate: 1.2, blur: 2, sepia: 0.2 }
   },
   PLASMA: {
@@ -62,7 +66,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Great Contrast', 'Natural Motion'],
     cons: ['High Heat', 'Power Hungry', 'Burn-in'],
-    angleShift: 0.1,
+    angleShift: 0.1, // Plasma is self-emissive, maintaining great angles
     filters: { contrast: 1.3, brightness: 0.9, saturate: 1.3, blur: 0.5, sepia: 0 }
   },
   LCD: {
@@ -80,7 +84,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Bright', 'Thin', 'Cheap'],
     cons: ['Grey Blacks', 'Backlight Bleed', 'Viewing Angle Shift'],
-    angleShift: 1.8,
+    angleShift: 1.8, // High shift: classic LCDs wash out quickly
     filters: { contrast: 0.8, brightness: 1.2, saturate: 0.8, blur: 0, sepia: 0 }
   },
   QLED: {
@@ -96,7 +100,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Vibrant Colors', 'Insanely Bright'],
     cons: ['Still has blooming', 'Not true black'],
-    angleShift: 1.4,
+    angleShift: 1.4, // Improved over basic LCD but still restricted by liquid crystals
     filters: { contrast: 1.1, brightness: 1.3, saturate: 1.5, blur: 0, sepia: 0 }
   },
   OLED: {
@@ -112,7 +116,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Infinite Contrast', 'Instant Response', 'Ultra-Thin'],
     cons: ['Burn-in risk', 'Lower brightness', 'Organic decay'],
-    angleShift: 0.05,
+    angleShift: 0.05, // Near-perfect viewing angles
     filters: { contrast: 1.5, brightness: 1.0, saturate: 1.2, blur: 0, sepia: 0 }
   },
   MicroLED: {
@@ -127,7 +131,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Perfect Blacks', 'No Burn-in', '10,000+ nits'],
     cons: ['Extreme Cost', 'Impossible to mass produce'],
-    angleShift: 0.05,
+    angleShift: 0.05, // Zero contrast loss at angles
     filters: { contrast: 1.6, brightness: 1.5, saturate: 1.3, blur: 0, sepia: 0 }
   },
   MiniLED: {
@@ -143,7 +147,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['High Brightness', 'Great Local Dimming', 'No Burn-in'],
     cons: ['Still has some blooming', 'Thicker than OLED'],
-    angleShift: 1.5,
+    angleShift: 1.5, // Similar to QLED
     filters: { contrast: 1.3, brightness: 1.4, saturate: 1.3, blur: 0, sepia: 0 }
   },
   QD_OLED: {
@@ -159,7 +163,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Best Color Purity', 'Infinite Contrast', 'Wide Viewing Angles'],
     cons: ['Burn-in risk', 'Expensive', 'Raised blacks in bright rooms'],
-    angleShift: 0.02,
+    angleShift: 0.02, // The current industry benchmark for viewing angles
     filters: { contrast: 1.5, brightness: 1.1, saturate: 1.8, blur: 0, sepia: 0 }
   }
 };
