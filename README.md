@@ -1,35 +1,30 @@
-# Screen Tech Explorer V2
+# Display Tech Breakdown (Fundamental Level)
 
-An interactive 3D and microscope-level simulation of various display technologies throughout history, from CRT to MicroLED.
+An interactive technical breakdown of display hardware, inspired by high-fidelity educational visualizations. This tool explores the fundamental physics and component architecture of screen technologies from CRT to future MicroLED.
 
-## Features
+## Enhanced Features (V3)
 
-- **3D Exploded View**: Rotate and explode the physical layer stack of different TV technologies.
-- **Natural 16:9 Widescreen**: The interactive stack uses a native widescreen aspect ratio, perfectly reflecting the shape of real televisions.
-- **Physics-Based Angle Shifting**: Realistic simulation of contrast and color degradation when viewing LCD-based screens from off-center. OLED and CRT maintain perfect images, just like in real life.
-- **Microscope Mode**: Zoom 30,000x to see the actual subpixel arrangements (Triad, Stripe, Diamond, WRGB).
-- **Integrated Video Simulation**: Watch a reference video play directly on the front glass of the 3D model, affected by real-time technology-specific filters.
-- **Real-time Filters**: Simulate contrast, brightness, saturation, and blur characteristics for each technology.
-- **Ambient Lighting Simulation**: Adjust room lighting to see how different screens handle reflections and black levels.
-- **Fully Responsive**: Optimized for all screen sizes and aspect ratios, with special cinematic scaling for 16:9 monitors.
+- **Technical Schematic UI**: A high-tech "HUD" (Heads-Up Display) aesthetic featuring blueprint grids, data readouts, and monospace typography.
+- **Expanded LCD Physics**: Deep-dive into specific LCD sub-types (**TN**, **IPS**, **VA**) with distinct crystal rotation physics and viewing angle characteristics.
+- **Fundamental Principles**: Each technology includes a breakdown of its core physical principle (e.g., *Thermionic Emission*, *Vertical Alignment*, *Electroluminescence*).
+- **Physics-Based Angle Shifting**: Real-time simulation of contrast and color degradation. LCD-based screens wash out based on their panel type, while self-emissive screens maintain perfect images.
+- **3D Exploded Schematic**: Inspect the internal architecture layer-by-layer with a native 16:9 widescreen aspect ratio.
+- **Microscope Magnification (30,000x)**: Inspect subpixel arrangements including TRIAD, STRIPE, DIAMOND, and WRGB patterns.
+- **Integrated Light-Path Simulation**: Visualizes how light waves travel through polarizers and color filters.
 
-## Display Technologies Included
+## Hardware Breakdown Included
 
-- **CRT (Cathode Ray Tube)**: The classic heavy tube with phosphor glow and electron guns.
-- **Plasma**: Gas-discharge cells with natural motion and high contrast.
-- **LCD (Liquid Crystal Display)**: The thin-film transistor standard with backlighting.
-- **QLED**: Quantum Dot enhanced LCD for vibrant colors.
-- **OLED**: Self-emissive organic pixels with infinite contrast.
-- **Mini-LED**: High-zone local dimming for superior HDR.
-- **QD-OLED**: The pinnacle of color purity and contrast.
-- **MicroLED**: The future of display tech with no compromises.
+- **Legacy**: CRT (Cathode Ray Tube), Plasma PDP.
+- **LCD Variations**: TN (Twisted Nematic), IPS (In-Plane Switching), VA (Vertical Alignment).
+- **Advanced LCD**: QLED (Quantum Dot), Mini-LED (FALD).
+- **Self-Emissive**: OLED (Organic LED), QD-OLED, MicroLED.
 
 ## Tech Stack
 
 - **React 19**
 - **TypeScript**
 - **Vite**
-- **Vanilla CSS (3D Transforms & Filters)**
+- **Vanilla CSS (3D Transforms & Physics-based Filters)**
 
 ## Getting Started
 

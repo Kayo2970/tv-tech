@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 import refVideo from './assets/reference-video.webm';
 
-type DisplayTech = 'CRT' | 'PLASMA' | 'LCD' | 'QLED' | 'OLED' | 'MiniLED' | 'QD_OLED' | 'MicroLED';
+// Added specific LCD sub-types (TN, IPS, VA) as discussed in the technical breakdown video
+type DisplayTech = 'CRT' | 'PLASMA' | 'TN_LCD' | 'IPS_LCD' | 'VA_LCD' | 'QLED' | 'OLED' | 'MiniLED' | 'QD_OLED' | 'MicroLED';
 
 interface Layer {
   name: string;
@@ -16,14 +17,13 @@ interface TechDetails {
   id: DisplayTech;
   name: string;
   year: string;
+  principles: string; // Fundamental physical principle (e.g., Electroluminescence)
   layers: Layer[];
   pixelPattern: 'TRIAD' | 'STRIPE' | 'DIAMOND' | 'WRGB';
   pros: string[];
   cons: string[];
   // angleShift: Coefficient simulating how much color/contrast degrades at off-angles.
-  // Values: 0 (Perfect/OLED) to 2 (Extreme/Old LCD)
   angleShift: number; 
-  // Base CSS filters applied to the reference video to simulate tech characteristics
   filters: {
     contrast: number;
     brightness: number;
@@ -38,171 +38,192 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     id: 'CRT',
     name: 'Cathode Ray Tube',
     year: '1950s',
+    principles: 'Thermionic emission & Phosphorescence',
     pixelPattern: 'TRIAD',
     layers: [
-      { name: 'Electron Guns', description: 'Fires RGB beams', color: 'rgba(100, 100, 255, 0.3)', thickness: 50 },
-      { name: 'Vacuum Tube', description: 'Airless glass envelope', color: 'rgba(200, 200, 200, 0.1)', thickness: 40 },
-      { name: 'Shadow Mask', description: 'Directs beams to phosphors', color: '#333', thickness: 5 },
-      { name: 'Phosphor Layer', description: 'Glows when hit by electrons', color: 'rgba(0, 255, 0, 0.5)', thickness: 10 },
-      { name: 'Front Glass', description: 'Thick protective glass', color: 'rgba(255, 255, 255, 0.2)', thickness: 20 },
+      { name: 'Electron Guns', description: 'R/G/B cathode emitters', color: 'rgba(100, 100, 255, 0.3)', thickness: 50 },
+      { name: 'Vacuum Tube', description: 'Focusing electromagnetic field', color: 'rgba(200, 200, 200, 0.1)', thickness: 40 },
+      { name: 'Shadow Mask', description: 'Physical aperture for beam alignment', color: '#333', thickness: 5 },
+      { name: 'Phosphor Layer', description: 'Kinetic-to-light energy conversion', color: 'rgba(0, 255, 0, 0.5)', thickness: 10 },
+      { name: 'Leaded Glass', description: 'X-ray shielding & viewing surface', color: 'rgba(255, 255, 255, 0.2)', thickness: 20 },
     ],
-    pros: ['Excellent Contrast', 'Zero Motion Blur'],
-    cons: ['Huge & Heavy', 'Flicker', 'Radiation'],
-    angleShift: 0.1, // CRT has excellent viewing angles due to phosphor emission
+    pros: ['Zero Motion Blur', 'Perfect Black Levels'],
+    cons: ['Extreme Weight', 'Analog Scanlines'],
+    angleShift: 0.1,
     filters: { contrast: 1.4, brightness: 0.8, saturate: 1.2, blur: 2, sepia: 0.2 }
   },
-  PLASMA: {
-    id: 'PLASMA',
-    name: 'Plasma Display Panel',
-    year: '2000s',
+  TN_LCD: {
+    id: 'TN_LCD',
+    name: 'Twisted Nematic LCD',
+    year: '1980s',
+    principles: 'Liquid crystal twisting (90°) via electrical potential',
     pixelPattern: 'STRIPE',
     layers: [
-      { name: 'Rear Glass', description: 'Backing substrate', color: '#222', thickness: 10 },
-      { name: 'Address Electrodes', description: 'Triggers specific cells', color: '#555', thickness: 5 },
-      { name: 'Gas Cells', description: 'Noble gas (Xe/Ne) discharge', color: 'rgba(100, 200, 255, 0.4)', thickness: 20 },
-      { name: 'Phosphor Coating', description: 'Converts UV to Visible Light', color: 'rgba(255, 255, 255, 0.5)', thickness: 5 },
-      { name: 'Front Electrodes', description: 'Sustains discharge', color: 'rgba(200, 200, 200, 0.1)', thickness: 5 },
-      { name: 'Front Glass', description: 'Viewing surface', color: 'rgba(255, 255, 255, 0.2)', thickness: 10 },
+      { name: 'Backlight', description: 'Uniform CCFL source', color: '#fff', thickness: 20 },
+      { name: 'Horiz. Polarizer', description: 'Filters light to horizontal wave', color: '#444', thickness: 5 },
+      { name: 'TN Liquid Crystals', description: 'Fastest response, narrowest twist', color: 'rgba(200, 255, 255, 0.1)', thickness: 15 },
+      { name: 'Vert. Polarizer', description: 'Light blocking/passing stage', color: '#444', thickness: 5 },
+      { name: 'Color Filter', description: 'Subpixel dye matrix', color: 'linear-gradient(90deg, #f00, #0f0, #00f)', thickness: 5 },
     ],
-    pros: ['Great Contrast', 'Natural Motion'],
-    cons: ['High Heat', 'Power Hungry', 'Burn-in'],
-    angleShift: 0.1, // Plasma is self-emissive, maintaining great angles
-    filters: { contrast: 1.3, brightness: 0.9, saturate: 1.3, blur: 0.5, sepia: 0 }
+    pros: ['Ultra-fast Response', 'Low Cost'],
+    cons: ['Poor Viewing Angles', 'Weak Contrast'],
+    angleShift: 2.0,
+    filters: { contrast: 0.7, brightness: 1.3, saturate: 0.7, blur: 0, sepia: 0 }
   },
-  LCD: {
-    id: 'LCD',
-    name: 'Liquid Crystal Display',
+  IPS_LCD: {
+    id: 'IPS_LCD',
+    name: 'In-Plane Switching LCD',
     year: '1990s',
+    principles: 'Parallel crystal rotation for improved off-axis visibility',
     pixelPattern: 'STRIPE',
     layers: [
-      { name: 'Backlight', description: 'White LEDs or CCFL', color: '#fff', thickness: 20 },
-      { name: 'Rear Polarizer', description: 'Polarizes light vertically', color: '#444', thickness: 5 },
-      { name: 'TFT Glass', description: 'Transistor control layer', color: 'rgba(100, 200, 255, 0.2)', thickness: 10 },
-      { name: 'Liquid Crystals', description: 'Twists light based on voltage', color: 'rgba(255, 255, 255, 0.1)', thickness: 15 },
-      { name: 'Color Filter', description: 'RGB RGB RGB Filters', color: 'linear-gradient(90deg, #f00, #0f0, #00f)', thickness: 5 },
-      { name: 'Front Polarizer', description: 'Blocks or allows light', color: '#444', thickness: 5 },
+      { name: 'W-LED Backlight', description: 'High brightness source', color: '#fff', thickness: 20 },
+      { name: 'Dual Polarizers', description: 'Phase-corrected light control', color: '#444', thickness: 5 },
+      { name: 'IPS Crystals', description: 'Lateral rotation (In-Plane)', color: 'rgba(200, 200, 255, 0.2)', thickness: 15 },
+      { name: 'Color Filter', description: 'High-purity RGB mask', color: 'linear-gradient(90deg, #f00, #0f0, #00f)', thickness: 5 },
     ],
-    pros: ['Bright', 'Thin', 'Cheap'],
-    cons: ['Grey Blacks', 'Backlight Bleed', 'Viewing Angle Shift'],
-    angleShift: 1.8, // High shift: classic LCDs wash out quickly
-    filters: { contrast: 0.8, brightness: 1.2, saturate: 0.8, blur: 0, sepia: 0 }
+    pros: ['Superb Viewing Angles', 'Color Accuracy'],
+    cons: ['IPS Glow', 'Slower Black-to-Black'],
+    angleShift: 0.4,
+    filters: { contrast: 0.9, brightness: 1.1, saturate: 1.1, blur: 0, sepia: 0 }
+  },
+  VA_LCD: {
+    id: 'VA_LCD',
+    name: 'Vertical Alignment LCD',
+    year: '1990s',
+    principles: 'Vertical crystal orientation for superior light blocking',
+    pixelPattern: 'STRIPE',
+    layers: [
+      { name: 'Backlight', description: 'Full-Array LED source', color: '#fff', thickness: 20 },
+      { name: 'Vertical Polarizer', description: 'Optimized for blocking', color: '#444', thickness: 5 },
+      { name: 'VA Crystals', description: 'Perpendicular alignment to substrate', color: 'rgba(255, 255, 200, 0.1)', thickness: 15 },
+      { name: 'Color Filter', description: 'Subpixel dye matrix', color: 'linear-gradient(90deg, #f00, #0f0, #00f)', thickness: 5 },
+    ],
+    pros: ['Deep Blacks (3000:1+)', 'High Contrast'],
+    cons: ['Black Smearing', 'Gamma Shift'],
+    angleShift: 1.2,
+    filters: { contrast: 1.3, brightness: 0.9, saturate: 1.0, blur: 0, sepia: 0 }
   },
   QLED: {
     id: 'QLED',
     name: 'Quantum Dot LCD',
     year: '2015s',
+    principles: 'Photo-luminescent nanocrystals (QD) for pure color',
     pixelPattern: 'STRIPE',
     layers: [
-      { name: 'Blue LED Backlight', description: 'High energy blue light source', color: '#00f', thickness: 20 },
-      { name: 'Quantum Dot Film', description: 'Converts blue to pure Red/Green', color: 'rgba(255, 0, 255, 0.3)', thickness: 10 },
-      { name: 'LCD Stack', description: 'Polarizers & Liquid Crystals', color: 'rgba(255, 255, 255, 0.2)', thickness: 30 },
-      { name: 'Anti-Reflective', description: 'Glossy or Matte finish', color: 'rgba(255, 255, 255, 0.1)', thickness: 5 },
+      { name: 'Blue LED Backlight', description: 'High energy photon source', color: '#00f', thickness: 20 },
+      { name: 'Quantum Dot Film', description: 'Pure Red/Green re-emission', color: 'rgba(255, 0, 255, 0.3)', thickness: 10 },
+      { name: 'VA/IPS LCD Stack', description: 'Polarized light modulator', color: 'rgba(255, 255, 255, 0.2)', thickness: 30 },
+      { name: 'Moth-eye Coating', description: 'Nano-structured anti-reflection', color: 'rgba(255, 255, 255, 0.1)', thickness: 5 },
     ],
-    pros: ['Vibrant Colors', 'Insanely Bright'],
-    cons: ['Still has blooming', 'Not true black'],
-    angleShift: 1.4, // Improved over basic LCD but still restricted by liquid crystals
+    pros: ['Extreme Peak Brightness', 'Wide Color Gamut'],
+    cons: ['Blooming/Halos', 'Backlight dependent'],
+    angleShift: 1.4,
     filters: { contrast: 1.1, brightness: 1.3, saturate: 1.5, blur: 0, sepia: 0 }
   },
   OLED: {
     id: 'OLED',
     name: 'Organic LED',
     year: '2010s',
-    pixelPattern: 'DIAMOND',
+    principles: 'Self-emissive carbon compounds (Electroluminescence)',
+    pixelPattern: 'WRGB',
     layers: [
-      { name: 'Substrate', description: 'Glass or Plastic base', color: '#111', thickness: 10 },
-      { name: 'TFT Layer', description: 'Controls individual pixels', color: 'rgba(100, 200, 255, 0.1)', thickness: 5 },
-      { name: 'Organic Emitters', description: 'Carbon-based light layers', color: 'rgba(0, 255, 100, 0.4)', thickness: 15 },
-      { name: 'Encapsulation', description: 'Protects from oxygen/moisture', color: 'rgba(255, 255, 255, 0.1)', thickness: 10 },
+      { name: 'TFT Backplane', description: 'Active-Matrix pixel logic', color: '#111', thickness: 10 },
+      { name: 'Organic Emitters', description: 'Direct light generation (no backlight)', color: 'rgba(0, 255, 100, 0.4)', thickness: 15 },
+      { name: 'Color Filter (WRGB)', description: 'White OLED + R/G/B pass-through', color: 'rgba(255, 255, 255, 0.1)', thickness: 10 },
+      { name: 'Circular Polarizer', description: 'Ambient light suppression', color: 'rgba(0, 0, 0, 0.3)', thickness: 5 },
     ],
-    pros: ['Infinite Contrast', 'Instant Response', 'Ultra-Thin'],
-    cons: ['Burn-in risk', 'Lower brightness', 'Organic decay'],
-    angleShift: 0.05, // Near-perfect viewing angles
+    pros: ['Infinite Contrast', 'Instant Pixel Response'],
+    cons: ['Permanent Burn-in', 'Organic Degradation'],
+    angleShift: 0.05,
     filters: { contrast: 1.5, brightness: 1.0, saturate: 1.2, blur: 0, sepia: 0 }
-  },
-  MicroLED: {
-    id: 'MicroLED',
-    name: 'MicroLED',
-    year: 'Future',
-    pixelPattern: 'STRIPE',
-    layers: [
-      { name: 'Backplane', description: 'Massive control circuit', color: '#000', thickness: 15 },
-      { name: 'Micro LEDs', description: 'Inorganic tiny RGB chips', color: '#fff', thickness: 10 },
-      { name: 'Protective Seal', description: 'Highly durable cover', color: 'rgba(255, 255, 255, 0.1)', thickness: 10 },
-    ],
-    pros: ['Perfect Blacks', 'No Burn-in', '10,000+ nits'],
-    cons: ['Extreme Cost', 'Impossible to mass produce'],
-    angleShift: 0.05, // Zero contrast loss at angles
-    filters: { contrast: 1.6, brightness: 1.5, saturate: 1.3, blur: 0, sepia: 0 }
   },
   MiniLED: {
     id: 'MiniLED',
     name: 'Mini-LED LCD',
     year: '2021',
+    principles: 'FALD (Full Array Local Dimming) via micro-LED zones',
     pixelPattern: 'STRIPE',
     layers: [
-      { name: 'Mini-LED Backlight', description: 'Thousands of tiny LED zones', color: '#fff', thickness: 20 },
-      { name: 'Quantum Dot Film', description: 'Enhances color purity', color: 'rgba(255, 0, 255, 0.2)', thickness: 10 },
-      { name: 'LCD Stack', description: 'Standard liquid crystal control', color: 'rgba(255, 255, 255, 0.1)', thickness: 25 },
-      { name: 'Front Polarizer', description: 'Final light filter', color: '#444', thickness: 5 },
+      { name: 'Mini-LED Matrix', description: 'Thousands of dimmable zones', color: '#fff', thickness: 20 },
+      { name: 'Diffuser Sheet', description: 'Light homogenization layer', color: 'rgba(255, 255, 255, 0.5)', thickness: 10 },
+      { name: 'Quantum Dot Film', description: 'Spectral enhancement', color: 'rgba(255, 0, 255, 0.2)', thickness: 10 },
+      { name: 'VA Panel', description: 'High-contrast light valve', color: 'rgba(255, 255, 255, 0.1)', thickness: 25 },
     ],
-    pros: ['High Brightness', 'Great Local Dimming', 'No Burn-in'],
-    cons: ['Still has some blooming', 'Thicker than OLED'],
-    angleShift: 1.5, // Similar to QLED
+    pros: ['OLED-like Blacks', '1000+ nits HDR'],
+    cons: ['Zone transition visible', 'Thicker profile'],
+    angleShift: 1.5,
     filters: { contrast: 1.3, brightness: 1.4, saturate: 1.3, blur: 0, sepia: 0 }
   },
   QD_OLED: {
     id: 'QD_OLED',
     name: 'Quantum Dot OLED',
     year: '2022',
+    principles: 'Blue OLED stack + Quantum Dot color conversion',
     pixelPattern: 'DIAMOND',
     layers: [
-      { name: 'TFT Backplane', description: 'Control circuitry', color: '#111', thickness: 10 },
-      { name: 'Blue OLED Emitters', description: 'Self-emissive blue light source', color: 'rgba(0, 100, 255, 0.5)', thickness: 15 },
-      { name: 'QD Color Converters', description: 'Converts blue to pure Red/Green', color: 'linear-gradient(90deg, #f00, #0f0)', thickness: 10 },
-      { name: 'Encapsulation', description: 'Protects from oxygen/moisture', color: 'rgba(255, 255, 255, 0.1)', thickness: 5 },
+      { name: 'Blue OLED Stack', description: 'High-efficiency base emission', color: 'rgba(0, 100, 255, 0.5)', thickness: 15 },
+      { name: 'QD Color Converters', description: 'Zero dye-loss conversion', color: 'linear-gradient(90deg, #f00, #0f0)', thickness: 10 },
+      { name: 'Glass Encapsulation', description: 'Environmental barrier', color: 'rgba(255, 255, 255, 0.1)', thickness: 5 },
     ],
-    pros: ['Best Color Purity', 'Infinite Contrast', 'Wide Viewing Angles'],
-    cons: ['Burn-in risk', 'Expensive', 'Raised blacks in bright rooms'],
-    angleShift: 0.02, // The current industry benchmark for viewing angles
+    pros: ['Purest Colors', 'Widest Viewing Angles'],
+    cons: ['Reflective in light', 'Expensive'],
+    angleShift: 0.02,
     filters: { contrast: 1.5, brightness: 1.1, saturate: 1.8, blur: 0, sepia: 0 }
+  },
+  MicroLED: {
+    id: 'MicroLED',
+    name: 'MicroLED',
+    year: 'Future',
+    principles: 'Inorganic tiny LED chips (Self-emissive)',
+    pixelPattern: 'STRIPE',
+    layers: [
+      { name: 'CMOS Backplane', description: 'High-speed control circuit', color: '#000', thickness: 15 },
+      { name: 'RGB MicroLEDs', description: 'Sub-100um inorganic chips', color: '#fff', thickness: 10 },
+      { name: 'Sapphire Glass', description: 'Military-grade protection', color: 'rgba(255, 255, 255, 0.1)', thickness: 10 },
+    ],
+    pros: ['10,000+ Nits', 'Lifelong durability'],
+    cons: ['Manufacturing yield issue', 'Modular seams'],
+    angleShift: 0.01,
+    filters: { contrast: 1.6, brightness: 1.5, saturate: 1.3, blur: 0, sepia: 0 }
+  },
+  PLASMA: {
+    id: 'PLASMA',
+    name: 'Plasma PDP',
+    year: '2000s',
+    principles: 'Ionized noble gas discharge producing UV',
+    pixelPattern: 'STRIPE',
+    layers: [
+      { name: 'Rear Glass', description: 'Substrate', color: '#222', thickness: 10 },
+      { name: 'Noble Gas Cells', description: 'Xenon/Neon plasma discharge', color: 'rgba(100, 200, 255, 0.4)', thickness: 20 },
+      { name: 'Phosphor coating', description: 'UV-to-Visible conversion', color: 'rgba(255, 255, 255, 0.5)', thickness: 5 },
+      { name: 'Front Glass', description: 'Viewing surface', color: 'rgba(255, 255, 255, 0.2)', thickness: 10 },
+    ],
+    pros: ['Great Motion Handling', 'Natural Colors'],
+    cons: ['Heavy Power Draw', 'Altitude sensitive'],
+    angleShift: 0.1,
+    filters: { contrast: 1.3, brightness: 0.9, saturate: 1.3, blur: 0.5, sepia: 0 }
   }
 };
 
-// Main Application Component: Manages the interactive display technology explorer
 const App: React.FC = () => {
-  // State for current selected technology (e.g., CRT, OLED)
-  const [tech, setTech] = useState<DisplayTech>('LCD');
-  
-  // State for 3D rotation of the exploded stack
+  const [tech, setTech] = useState<DisplayTech>('IPS_LCD');
   const [rotation, setRotation] = useState({ x: -15, y: -30 });
-  
-  // State for the Z-axis separation between layers (0 to 1.5)
   const [exploded, setExploded] = useState(0.5);
-  
-  // State for ambient lighting intensity (0 to 1)
   const [ambientLight, setAmbientLight] = useState(0.1);
-  
-  // Toggle between 3D Exploded View and 2D Microscope Subpixel View
   const [isMicroscope, setIsMicroscope] = useState(false);
-  
-  // State to track if the user is currently dragging the 3D canvas
   const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef<HTMLDivElement>(null);
+  const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Retrieve details for the currently selected technology
   const currentTech = TECH_DETAILS[tech];
 
-  // --- ANGLE SHIFT CALCULATION ---
-  // Calculates how much the current viewing angle deviates from 0,0
   const getAngleOffset = () => {
     const deviation = Math.sqrt(Math.pow(rotation.x, 2) + Math.pow(rotation.y, 2));
-    // Normalize deviation to a factor that affects filters
     return Math.min(deviation / 90, 1) * currentTech.angleShift;
   };
 
   const angleOffset = getAngleOffset();
 
-  // Handles 3D rotation based on mouse movement when dragging
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
     setRotation(prev => ({
@@ -211,62 +232,61 @@ const App: React.FC = () => {
     }));
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    const touch = e.touches[0];
+    lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !lastTouchRef.current) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - lastTouchRef.current.x;
+    const dy = touch.clientY - lastTouchRef.current.y;
+    setRotation(prev => ({
+      x: prev.x - dy * 0.5,
+      y: prev.y + dx * 0.5
+    }));
+    lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
   return (
     <div 
-      className="app-root" 
-      style={{ 
-        '--ambient': ambientLight,
-        backgroundColor: `rgba(0,0,0, ${1 - ambientLight})`
-      } as any}
+      className="app-root tech-schematic" 
+      style={{ '--ambient': ambientLight, backgroundColor: `rgba(0,0,0, ${1 - ambientLight})` } as any}
       onMouseMove={handleMouseMove}
       onMouseUp={() => setIsDragging(false)}
       onMouseLeave={() => setIsDragging(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={() => setIsDragging(false)}
     >
-      {/* Visual overlay for ambient lighting simulation */}
+      <div className="blueprint-grid"></div>
       <div className="ambient-overlay" style={{ opacity: ambientLight }}></div>
 
       <header className="main-header">
-        <div className="logo">SCREEN_TECH_EXPLORER_V2</div>
-        <div className="subtitle">Detailed Component Architecture & Light Pathways</div>
+        <div className="logo">DISPLAY_TECH_BREAKDOWN</div>
+        <div className="subtitle">Fundamental Level Physics & Component Architecture</div>
       </header>
 
       <main className="main-layout">
-        {/* The 3D Interaction Stage: Where the visual simulation happens */}
         <section className="stage-area">
-          {/* View Toggles: Switch between macro and micro views */}
           <div className="view-toggle">
             <button onClick={() => setIsMicroscope(false)} className={!isMicroscope ? 'active' : ''}>Exploded View</button>
             <button onClick={() => setIsMicroscope(true)} className={isMicroscope ? 'active' : ''}>Microscope (Subpixels)</button>
           </div>
 
-          <div 
-            className="interaction-canvas"
-            onMouseDown={() => setIsDragging(true)}
-          >
+          <div className="interaction-canvas" onMouseDown={() => setIsDragging(true)}>
             {isMicroscope ? (
-              /* Microscope View: Shows the underlying subpixel structures */
               <div className="microscope-view">
-                {/* Background video simulated through the pixel structure */}
-                <video 
-                  src={refVideo} 
-                  autoPlay 
-                  loop 
-                  muted 
-                  className="microscope-bg-video"
+                <video src={refVideo} autoPlay loop muted className="microscope-bg-video"
                   style={{
-                    filter: `
-                      contrast(${currentTech.filters.contrast}) 
-                      brightness(${currentTech.filters.brightness}) 
-                      saturate(${currentTech.filters.saturate}) 
-                      blur(${currentTech.filters.blur}px)
-                      sepia(${currentTech.filters.sepia})
-                    `
+                    filter: `contrast(${currentTech.filters.contrast}) brightness(${currentTech.filters.brightness}) saturate(${currentTech.filters.saturate}) blur(${currentTech.filters.blur}px) sepia(${currentTech.filters.sepia})`
                   }}
                 />
                 <div className={`pixel-grid ${currentTech.pixelPattern}`}>
                   {[...Array(30)].map((_, i) => (
                     <div key={i} className="pixel-unit">
-                      {/* Dynamic subpixel rendering based on technology pattern */}
                       <div className="sub R"></div>
                       <div className="sub G"></div>
                       {currentTech.pixelPattern === 'DIAMOND' && <div className="sub G G2"></div>}
@@ -275,111 +295,96 @@ const App: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                <div className="zoom-overlay">30,000x ZOOM</div>
+                <div className="zoom-overlay">30,000x MAGNIFICATION</div>
               </div>
             ) : (
-              /* Exploded View: 3D representation of the physical layer stack */
-              <div 
-                className="exploded-stack"
-                style={{ 
-                  transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
-                }}
-              >
+              <div className="exploded-stack" style={{ transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)` }}>
                 {currentTech.layers.map((layer, idx) => (
-                  <div 
-                    key={idx}
-                    className="layer-plane"
+                  <div key={idx} className="layer-plane"
                     style={{
                       transform: `translateZ(${idx * 150 * exploded}px)`,
                       background: layer.color,
-                      border: `2px solid rgba(255, 255, 255, ${0.1 + (idx * 0.1)})`
+                      border: `1px solid rgba(0, 242, 255, ${0.1 + (idx * 0.1)})`
                     }}
                   >
-                    {/* Integrated Reference Video on the top-most layer */}
                     {idx === currentTech.layers.length - 1 && (
-                      <video 
-                        src={refVideo} 
-                        autoPlay 
-                        loop 
-                        muted 
-                        className="layer-video"
+                      <video src={refVideo} autoPlay loop muted className="layer-video"
                         style={{
-                          filter: `
-                            contrast(${currentTech.filters.contrast - (angleOffset * 0.5)}) 
-                            brightness(${currentTech.filters.brightness + (angleOffset * 0.3)}) 
-                            saturate(${currentTech.filters.saturate - angleOffset}) 
-                            blur(${currentTech.filters.blur}px)
-                            sepia(${currentTech.filters.sepia})
-                          `,
+                          filter: `contrast(${currentTech.filters.contrast - (angleOffset * 0.5)}) brightness(${currentTech.filters.brightness + (angleOffset * 0.3)}) saturate(${currentTech.filters.saturate - angleOffset})`,
                           opacity: 1 - (angleOffset * 0.2)
                         }}
                       />
                     )}
                     <div className="layer-label">
+                      <div className="idx">0{idx + 1}</div>
                       <h3>{layer.name}</h3>
                       <p>{layer.description}</p>
                     </div>
                   </div>
                 ))}
-                
-                {/* Light Ray Simulation: Visualizes how light travels through the stack */}
                 <div className="light-path" style={{ height: `${currentTech.layers.length * 150 * exploded}px` }}></div>
               </div>
             )}
           </div>
           
-          <div className="drag-hint">DRAG TO ROTATE 360°</div>
+          <div className="drag-hint">DRAG TO INSPECT INTERNAL ARCHITECTURE</div>
           <div className="filter-stats-stage">
-            {currentTech.id} MODE ACTIVE 
-            {angleOffset > 0.1 && <span className="angle-warning"> (ANGLE SHIFT DETECTED)</span>}
+            <span className="tech-id">{currentTech.id}</span>
+            {angleOffset > 0.1 && <span className="angle-warning"> [ANGLE_OFFSET_ACTIVE]</span>}
           </div>
         </section>
 
-        {/* Control Side Panel: Adjust technology and simulation parameters */}
-        <aside className="control-panel">
+        <aside className="control-panel hud-panel">
           <section className="tech-selector">
-            <label>DISPLAY TECHNOLOGY</label>
+            <label className="hud-label">CORE ARCHITECTURE</label>
             <div className="tech-grid">
               {(Object.keys(TECH_DETAILS) as DisplayTech[]).map(t => (
-                <button 
-                  key={t}
-                  className={tech === t ? 'active' : ''}
-                  onClick={() => setTech(t)}
-                >
-                  {t}
-                </button>
+                <button key={t} className={tech === t ? 'active' : ''} onClick={() => setTech(t)}>{t.replace('_', ' ')}</button>
               ))}
             </div>
           </section>
 
-          <section className="info-box">
-            <h2>{currentTech.name} <span className="year">{currentTech.year}</span></h2>
+          <section className="info-box schematic-info">
+            <div className="header-row">
+              <h2>{currentTech.name}</h2>
+              <span className="year-badge">{currentTech.year}</span>
+            </div>
+            <div className="principle-box">
+              <span className="label">FUNDAMENTAL PRINCIPLE</span>
+              <p>{currentTech.principles}</p>
+            </div>
             <div className="pros-cons">
               <div className="col">
-                <span className="label">STRENGTHS</span>
+                <span className="label">CHARACTERISTICS</span>
                 <ul>{currentTech.pros.map(p => <li key={p}>{p}</li>)}</ul>
               </div>
               <div className="col">
-                <span className="label">WEAKNESSES</span>
+                <span className="label">DRAWBACKS</span>
                 <ul>{currentTech.cons.map(c => <li key={c}>{c}</li>)}</ul>
               </div>
             </div>
           </section>
 
-          <section className="sliders">
+          <section className="sliders hud-sliders">
             <div className="slider-group">
-              <label>LAYER SEPARATION (EXPLOSION)</label>
+              <div className="slider-header">
+                <label>LAYER SEPARATION</label>
+                <span className="value">{(exploded * 100).toFixed(0)}%</span>
+              </div>
               <input type="range" min="0" max="1.5" step="0.01" value={exploded} onChange={e => setExploded(Number(e.target.value))} />
             </div>
             
             <div className="slider-group">
-              <label>ROOM LIGHTING (AMBIENT)</label>
+              <div className="slider-header">
+                <label>AMBIENT INTENSITY</label>
+                <span className="value">{(ambientLight * 100).toFixed(0)}%</span>
+              </div>
               <input type="range" min="0" max="1" step="0.01" value={ambientLight} onChange={e => setAmbientLight(Number(e.target.value))} />
             </div>
           </section>
 
           <div className="physics-note">
-            * Simulation uses real-world layer stacks for {currentTech.id}. Light absorption and refraction are simulated via CSS filters.
+            * SCHEMATIC DATA: Simulating light modulations, polarization filters, and atomic-level emission characteristics based on fundamental hardware principles.
           </div>
         </aside>
       </main>
