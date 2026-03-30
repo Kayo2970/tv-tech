@@ -1,31 +1,68 @@
-/* --- GLOBAL STYLES & HUD THEME --- */
+/* ================================================================
+   DISPLAY TECH BREAKDOWN — HUD THEME  (fully responsive rewrite)
+   Breakpoints:
+     XL  ≥ 1400px   (widescreen, side-by-side, 500px panel)
+     LG  1100–1399  (desktop, side-by-side,  400px panel)
+     MD   900–1099  (laptop, side-by-side,   340px panel)
+     SM   600– 899  (tablet, stacked layout)
+     XS     < 600   (phone,  stacked, compact)
+================================================================ */
+
+/* ----------------------------------------------------------------
+   DESIGN TOKENS
+---------------------------------------------------------------- */
 :root {
-  --bg: #020205;
-  --accent: #00f2ff;
-  --accent-dim: rgba(0, 242, 255, 0.2);
-  --panel: rgba(10, 15, 25, 0.95);
-  --text: #e0e0e0;
-  --grid: rgba(0, 242, 255, 0.05);
+  --bg:           #020205;
+  --accent:       #00f2ff;
+  --accent-dim:   rgba(0, 242, 255, 0.2);
+  --accent-glow:  rgba(0, 242, 255, 0.5);
+  --panel:        rgba(8, 12, 22, 0.97);
+  --text:         #e0e0e0;
+  --text-dim:     rgba(224, 224, 224, 0.5);
+  --grid:         rgba(0, 242, 255, 0.04);
+  --panel-width:  420px;
+  --header-h:     80px;
+}
+
+/* ----------------------------------------------------------------
+   RESET & BASE
+---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
 }
 
 body {
-  margin: 0;
-  padding: 0;
   font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
   background: var(--bg);
-  overflow: hidden;
+  overflow: hidden;           /* lock scroll on desktop */
   user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Blueprint Grid Background */
+/* ----------------------------------------------------------------
+   ROOT WRAPPER
+---------------------------------------------------------------- */
+.app-root {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.5s ease;
+}
+
+/* Blueprint grid background */
 .blueprint-grid {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
+  inset: 0;
+  background-image:
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 50px 50px;
@@ -33,74 +70,106 @@ body {
   z-index: 0;
 }
 
-.app-root {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  transition: background-color 0.5s ease;
-}
-
 .ambient-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: white;
   pointer-events: none;
   z-index: 100;
   mix-blend-mode: soft-light;
+  transition: opacity 0.4s ease;
 }
 
-/* --- HUD HEADER --- */
+/* Directional light sweep — simulates window/lamp hitting the screen from an angle */
+.directional-light-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 101;
+  mix-blend-mode: screen;
+  transition: background 0.5s ease;
+}
+
+/* Colour temperature tint — warm amber or cool blue wash */
+.temperature-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 102;
+  mix-blend-mode: multiply;
+  transition: background 0.5s ease;
+}
+
+/* Surface glare — conic radial highlight from top-right (typical window position) */
+.glare-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 103;
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    ellipse 70% 55% at 80% 15%,
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,0.4) 30%,
+    transparent 65%
+  );
+  transition: opacity 0.4s ease;
+}
+
+/* ----------------------------------------------------------------
+   HEADER
+---------------------------------------------------------------- */
 .main-header {
-  padding: 30px 50px;
+  flex-shrink: 0;
+  height: var(--header-h);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 clamp(20px, 4vw, 50px);
   border-bottom: 1px solid var(--accent-dim);
-  background: linear-gradient(to right, rgba(0, 242, 255, 0.05), transparent);
+  background: linear-gradient(to right, rgba(0, 242, 255, 0.07), transparent);
   z-index: 10;
 }
 
 .logo {
   font-family: monospace;
-  font-size: 2rem;
+  font-size: clamp(1.2rem, 3vw, 2rem);
   font-weight: 900;
-  letter-spacing: 6px;
+  letter-spacing: clamp(3px, 0.8vw, 8px);
   color: var(--accent);
-  text-shadow: 0 0 15px var(--accent);
+  text-shadow: 0 0 20px var(--accent);
+  line-height: 1.1;
 }
 
 .subtitle {
-  font-size: 0.75rem;
-  opacity: 0.6;
-  margin-top: 8px;
+  font-size: clamp(0.55rem, 1.2vw, 0.72rem);
+  opacity: 0.55;
+  margin-top: 4px;
   text-transform: uppercase;
-  letter-spacing: 4px;
+  letter-spacing: clamp(2px, 0.6vw, 5px);
   font-family: monospace;
 }
 
-/* --- MAIN LAYOUT: FLUID GRID --- */
+/* ----------------------------------------------------------------
+   MAIN LAYOUT  (side-by-side grid)
+---------------------------------------------------------------- */
 .main-layout {
   flex: 1;
+  min-height: 0;           /* allow flex child to shrink */
   display: grid;
-  grid-template-columns: 1fr 450px;
-  padding: clamp(20px, 4vw, 50px);
-  gap: clamp(20px, 4vw, 50px);
-  min-height: 0;
+  grid-template-columns: 1fr var(--panel-width);
+  grid-template-rows: 1fr;
+  gap: clamp(12px, 2vw, 28px);
+  padding: clamp(12px, 2vw, 28px);
+  z-index: 1;
 }
 
-/* Cinematic Widescreen Scaling */
-@media (min-aspect-ratio: 16/9) and (min-width: 1200px) {
-  .main-layout {
-    grid-template-columns: 1fr 500px;
-  }
-  .logo { font-size: 2.5rem; }
-}
-
-/* --- STAGE AREA: RESPONSIVE CONTAINER --- */
+/* ----------------------------------------------------------------
+   STAGE AREA
+---------------------------------------------------------------- */
 .stage-area {
   position: relative;
-  background: rgba(0, 242, 255, 0.02);
+  background: rgba(0, 242, 255, 0.015);
   border-radius: 4px;
   border: 1px solid var(--accent-dim);
   display: flex;
@@ -108,232 +177,760 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  min-height: 400px; /* Base height for mobile */
+  min-height: 0;
 }
 
-/* View Toggle: Better touch targets */
+/* ----------------------------------------------------------------
+   VIEW TOGGLE BUTTONS
+---------------------------------------------------------------- */
 .view-toggle {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 16px;
+  left: 16px;
   z-index: 50;
   display: flex;
   flex-wrap: wrap;
   gap: 1px;
   background: var(--accent-dim);
   padding: 1px;
-  max-width: calc(100% - 40px);
+  max-width: calc(100% - 32px);
 }
 
 .view-toggle button {
-  background: #000;
+  background: rgba(0, 0, 0, 0.85);
   border: none;
   color: var(--accent);
-  padding: 12px 18px;
+  padding: clamp(8px, 1.2vh, 12px) clamp(10px, 1.5vw, 18px);
   cursor: pointer;
-  font-size: clamp(0.6rem, 1.5vw, 0.75rem);
+  font-size: clamp(0.55rem, 1.2vw, 0.72rem);
   font-family: monospace;
   text-transform: uppercase;
   letter-spacing: 1px;
   transition: all 0.2s;
   flex: 1 1 auto;
+  white-space: nowrap;
 }
 
-/* --- 3D SCHEMATIC STACK: FLUID SCALING --- */
+.view-toggle button:hover,
+.view-toggle button.active {
+  background: var(--accent);
+  color: #000;
+}
+
+.reset-btn {
+  opacity: 0.7;
+}
+
+/* ----------------------------------------------------------------
+   INTERACTION CANVAS  — the 3D perspective container
+   This must fill the stage so the layers have real px dimensions.
+---------------------------------------------------------------- */
+.interaction-canvas {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  perspective: 1200px;
+  perspective-origin: 50% 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.interaction-canvas:active { cursor: grabbing; }
+
+/* ----------------------------------------------------------------
+   EXPLODED-STACK
+   Uses explicit pixel sizes via CSS custom props set inline by JS,
+   but we fall back to percentage-based sizing that actually works.
+---------------------------------------------------------------- */
 .exploded-stack {
   position: relative;
-  width: 90%;
-  max-width: 1000px;
-  aspect-ratio: 16 / 9;
+  /* Fill 80 % of the available canvas width, maintain 16:9 */
+  width: 80%;
+  /* We use a padding-bottom trick to enforce 16:9 without JS */
+  /* But height:0 + padding won't work with 3D children, so we
+     use a fixed intrinsic size driven by viewport units instead. */
+  height: 0;
+  padding-bottom: 45%;          /* 80% wide × (9/16) = 45% of parent w */
   transform-style: preserve-3d;
-  transition: transform 0.1s ease-out;
+  transition: transform 0.05s linear;
 }
 
+/* Each layer fills the same bounding box as the stack */
 .layer-plane {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   transform-style: preserve-3d;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  box-sizing: border-box;
   backdrop-filter: blur(1px);
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: inset 0 0 50px rgba(0, 242, 255, 0.05);
-  overflow: hidden; /* Critical for video containment */
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 0 60px rgba(0, 242, 255, 0.04);
+  /* overflow: visible — labels must float above the plane */
+  overflow: visible;
 }
 
-.layer-video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-}
-
+/* ----------------------------------------------------------------
+   MEDIA INSIDE LAYERS
+---------------------------------------------------------------- */
+.layer-video,
 .microscope-bg-video {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.3;
   pointer-events: none;
 }
 
+.microscope-bg-video { opacity: 0.3; }
+
+/* ----------------------------------------------------------------
+   LAYER LABEL — 3D extruded style, FLOATING ABOVE each layer
+---------------------------------------------------------------- */
 .layer-label {
   position: absolute;
-  left: -5%; /* Using % for relative offset */
-  top: 10%;
+  left: 3%;
+  /* Sit just above the top edge of the layer plane */
+  top: 0;
+  transform: translateY(-100%) translateZ(100px);
   display: flex;
-  align-items: flex-start;
-  gap: clamp(10px, 2vw, 15px);
-  transform: translateZ(80px);
+  flex-direction: column;
+  gap: 2px;
   pointer-events: none;
-  z-index: 10;
+  z-index: 20;
+  background: rgba(0,0,0,0.72);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 0 0;
+  padding: 4px 10px 6px 8px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 16px rgba(0,242,255,0.3), inset 0 0 6px rgba(0,242,255,0.04);
+  min-width: 120px;
+}
+
+.layer-label .idx {
+  font-family: monospace;
+  font-size: clamp(0.5rem, 1vw, 0.65rem);
+  color: var(--accent);
+  letter-spacing: 3px;
+  opacity: 0.8;
+  line-height: 1;
 }
 
 .layer-label h3 {
-  font-size: clamp(0.8rem, 2vw, 1.1rem);
+  margin: 0;
+  font-family: monospace;
+  font-size: clamp(0.65rem, 1.5vw, 0.95rem);
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+  /* 3D extruded text-shadow */
+  text-shadow:
+    0 1px 0 rgba(0,242,255,0.9),
+    0 2px 0 rgba(0,200,220,0.7),
+    0 3px 0 rgba(0,160,185,0.5),
+    0 4px 0 rgba(0,100,140,0.35),
+    0 5px 1px rgba(0,0,0,0.2),
+    0 0 18px rgba(0,242,255,0.5);
+  line-height: 1.1;
 }
 
 .layer-label p {
-  font-size: clamp(0.6rem, 1.5vw, 0.75rem);
-  max-width: clamp(150px, 30vw, 250px);
+  margin: 0;
+  font-family: monospace;
+  font-size: clamp(0.48rem, 0.9vw, 0.62rem);
+  color: rgba(180,240,255,0.75);
+  letter-spacing: 0.5px;
+  max-width: clamp(100px, 18vw, 200px);
+  line-height: 1.4;
 }
 
-/* --- HUD CONTROL PANEL: SCROLLABLE --- */
+/* Light path indicator */
+.light-path {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to top, transparent, var(--accent-glow));
+  pointer-events: none;
+  transition: height 0.5s;
+}
+
+/* ----------------------------------------------------------------
+   MICROSCOPE VIEW
+---------------------------------------------------------------- */
+.microscope-view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ----------------------------------------------------------------
+   PIXEL GRID OVERLAY (Microscope mode)
+---------------------------------------------------------------- */
+.pixel-grid {
+  display: grid;
+  gap: 2px;
+  z-index: 5;
+  position: relative;
+}
+
+.pixel-grid.STRIPE,
+.pixel-grid.TRIAD,
+.pixel-grid.WRGB  { grid-template-columns: repeat(5, 1fr); }
+.pixel-grid.DIAMOND { grid-template-columns: repeat(4, 1fr); }
+
+.pixel-unit {
+  display: flex;
+  gap: 2px;
+  width: clamp(40px, 7vw, 70px);
+  height: clamp(80px, 14vw, 140px);
+}
+
+.sub {
+  flex: 1;
+  border-radius: 2px;
+  opacity: 0.6;
+  animation: subpixel-pulse 1.8s ease-in-out infinite alternate;
+}
+.sub.R { background: #f00; animation-delay: 0s; }
+.sub.G { background: #0f0; animation-delay: 0.3s; }
+.sub.G2 { background: #0d0; animation-delay: 0.15s; }
+.sub.B { background: #00f; animation-delay: 0.6s; }
+.sub.W { background: #fff; animation-delay: 0.9s; }
+
+@keyframes subpixel-pulse {
+  from { opacity: 0.3; }
+  to   { opacity: 0.85; }
+}
+
+/* ----------------------------------------------------------------
+   STAGE OVERLAYS
+---------------------------------------------------------------- */
+.zoom-overlay {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-family: monospace;
+  font-size: clamp(0.55rem, 1vw, 0.7rem);
+  color: var(--accent);
+  opacity: 0.7;
+  letter-spacing: 2px;
+  z-index: 20;
+}
+
+.drag-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: monospace;
+  font-size: clamp(0.5rem, 1vw, 0.65rem);
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  pointer-events: none;
+  z-index: 20;
+  animation: blink 3s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.9; }
+}
+
+.filter-stats-stage {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-family: monospace;
+  font-size: clamp(0.6rem, 1vw, 0.72rem);
+  color: var(--accent);
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--accent-dim);
+  padding: 4px 10px;
+  letter-spacing: 2px;
+  z-index: 20;
+}
+
+.angle-warning { color: #ff6b6b; margin-left: 6px; }
+
+/* ----------------------------------------------------------------
+   HUD CONTROL PANEL (right sidebar)
+---------------------------------------------------------------- */
 .hud-panel {
+  min-height: 0;
   background: var(--panel);
   border: 1px solid var(--accent-dim);
-  padding: clamp(20px, 3vw, 40px);
+  border-radius: 4px;
+  padding: clamp(14px, 2vw, 28px);
   display: flex;
   flex-direction: column;
-  gap: clamp(20px, 3vw, 35px);
-  box-shadow: -20px 0 50px rgba(0,0,0,0.8);
-  overflow-y: auto; /* Enable scroll for short viewports */
+  gap: clamp(14px, 2vh, 24px);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.7);
+  overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--accent-dim) transparent;
 }
 
-/* Technology Grid: Responsive buttons */
-.tech-grid {
+.hud-label {
+  display: block;
+  font-family: monospace;
+  font-size: clamp(0.6rem, 1vw, 0.72rem);
+  letter-spacing: 3px;
+  color: var(--accent);
+  opacity: 0.8;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* ----------------------------------------------------------------
+   TECHNOLOGY + SOURCE GRIDS
+---------------------------------------------------------------- */
+.tech-grid,
+.source-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 6px;
 }
 
-/* Responsive Breakpoints */
-@media (max-width: 1100px) {
-  .main-layout {
-    grid-template-columns: 1fr 380px;
-  }
+.tech-grid button,
+.source-grid button,
+.media-selector button {
+  background: rgba(0, 242, 255, 0.04);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  padding: clamp(6px, 1vh, 10px) 6px;
+  cursor: pointer;
+  font-size: clamp(0.55rem, 0.9vw, 0.68rem);
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  border-radius: 2px;
 }
 
-@media (max-width: 1000px) {
-  body {
-    overflow-y: auto;
-  }
+.tech-grid button:hover,
+.source-grid button:hover,
+.media-selector button:hover {
+  background: rgba(0, 242, 255, 0.12);
+  border-color: var(--accent-glow);
+}
+
+.tech-grid button.active,
+.source-grid button.active,
+.media-selector button.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 0 12px var(--accent-glow);
+  border-color: var(--accent);
+}
+
+/* ----------------------------------------------------------------
+   INFO BOX (name, year, pros/cons)
+---------------------------------------------------------------- */
+.schematic-info {
+  border-top: 1px solid var(--accent-dim);
+  padding-top: clamp(12px, 2vh, 20px);
+}
+
+.header-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.header-row h2 {
+  margin: 0;
+  font-family: monospace;
+  font-size: clamp(0.9rem, 1.8vw, 1.3rem);
+  color: var(--accent);
+  letter-spacing: 2px;
+}
+
+.year-badge {
+  font-family: monospace;
+  font-size: clamp(0.6rem, 1vw, 0.72rem);
+  border: 1px solid var(--accent-dim);
+  padding: 2px 8px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+
+.principle-box {
+  background: rgba(0, 242, 255, 0.03);
+  border: 1px solid var(--accent-dim);
+  border-left: 3px solid var(--accent);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 0 3px 3px 0;
+}
+
+.principle-box .label,
+.pros-cons .label {
+  font-family: monospace;
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  color: var(--accent);
+  opacity: 0.7;
+  display: block;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.principle-box p {
+  font-size: clamp(0.65rem, 1.1vw, 0.78rem);
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0;
+}
+
+.pros-cons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pros-cons .col ul {
+  margin: 0;
+  padding: 0 0 0 14px;
+}
+
+.pros-cons .col li {
+  font-size: clamp(0.6rem, 1vw, 0.72rem);
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* ----------------------------------------------------------------
+   SLIDERS
+---------------------------------------------------------------- */
+.hud-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slider-header label {
+  font-family: monospace;
+  font-size: clamp(0.55rem, 0.9vw, 0.65rem);
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.slider-header .value {
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: var(--accent);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--accent-dim);
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+  cursor: pointer;
+}
+
+/* ----------------------------------------------------------------
+   PHYSICS NOTE
+---------------------------------------------------------------- */
+.physics-note {
+  font-family: monospace;
+  font-size: clamp(0.5rem, 0.8vw, 0.6rem);
+  color: var(--text-dim);
+  line-height: 1.6;
+  border-top: 1px solid var(--accent-dim);
+  padding-top: 10px;
+  opacity: 0.5;
+}
+
+/* ================================================================
+   RESPONSIVE BREAKPOINTS
+================================================================ */
+
+/* --- LG: 1100–1399 -------------------------------------------- */
+@media (max-width: 1399px) {
+  :root { --panel-width: 400px; }
+}
+
+/* --- MD: 900–1099 --------------------------------------------- */
+@media (max-width: 1099px) {
+  :root { --panel-width: 340px; }
+  .main-layout { gap: 14px; padding: 14px; }
+}
+
+/* --- SM: tablet / narrow laptop  (< 900px) -------------------- */
+@media (max-width: 899px) {
+  body { overflow-y: auto; }
+
   .app-root {
     height: auto;
     min-height: 100vh;
+    overflow: visible;
   }
+
   .main-layout {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
-    padding: 20px;
+    gap: 14px;
+    padding: 14px;
   }
+
+  /* Stage gets a fixed viewport-relative height */
   .stage-area {
-    height: 60vh;
-    min-height: 350px;
+    height: 56vw;             /* 16:9-ish based on viewport width */
+    min-height: 320px;
+    max-height: 65vh;
   }
+
   .hud-panel {
-    border-top: 1px solid var(--accent-dim);
-    box-shadow: 0 -20px 50px rgba(0,0,0,0.5);
+    box-shadow: none;
+    border-top: 2px solid var(--accent-dim);
+    max-height: none;
+    overflow-y: visible;
   }
-  .layer-plane {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
+
+  .main-header {
+    height: auto;
+    padding: 14px 20px;
+  }
+}
+
+/* --- XS: phone (< 600px) --------------------------------------- */
+@media (max-width: 599px) {
+  :root { --header-h: 64px; }
+
+  .main-layout { gap: 10px; padding: 10px; }
+
+  .stage-area {
+    height: 60vw;
+    min-height: 240px;
+    max-height: 50vh;
+  }
+
+  .logo {
+    font-size: clamp(1rem, 5vw, 1.4rem);
+    letter-spacing: 3px;
+  }
+
+  .view-toggle { top: 8px; left: 8px; }
+
+  .view-toggle button {
+    padding: 6px 10px;
+    font-size: 0.6rem;
+  }
+
+  .tech-grid,
+  .source-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 5px;
+  }
+
+  .pros-cons {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+/* --- Landscape short screens ----------------------------------- */
+@media (max-height: 520px) and (orientation: landscape) {
+  .main-header { padding: 6px 20px; height: 50px; }
+  .app-root { height: auto; }
+  .main-layout {
+    grid-template-columns: 1fr 300px;
+    padding: 8px;
+    gap: 8px;
+  }
+  body { overflow: auto; }
+}
+
+/* ================================================================
+   LIGHTING PANEL & PRO MENU
+================================================================ */
+.lighting-panel {
+  border-top: 1px solid var(--accent-dim);
+  padding-top: clamp(12px, 2vh, 18px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lighting-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 20px;
-  box-sizing: border-box;
-  backdrop-filter: blur(1px);
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: inset 0 0 50px rgba(0, 242, 255, 0.05);
-  overflow: hidden; /* Critical for video containment */
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.layer-video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
+.lighting-header .hud-label {
+  margin-bottom: 0;
 }
 
-.microscope-bg-video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.3;
-  pointer-events: none;
+/* PRO toggle pill button */
+.pro-toggle {
+  background: rgba(0,242,255,0.06);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  font-family: monospace;
+  font-size: 0.62rem;
+  letter-spacing: 1.5px;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 20px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.layer-label {
-    left: 10px;
-    top: 10px;
-  }
+.pro-toggle:hover {
+  background: rgba(0,242,255,0.15);
+  border-color: var(--accent);
 }
 
-@media (max-width: 600px) {
-  .main-header {
-    padding: 20px;
-  }
-  .logo { font-size: 1.4rem; letter-spacing: 3px; }
-  .subtitle { font-size: 0.6rem; letter-spacing: 2px; }
-  
-  .tech-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .view-toggle {
-    top: 10px;
-    left: 10px;
-  }
-  
-  .filter-stats-stage {
-    bottom: 10px;
-    right: 10px;
-    font-size: 0.65rem;
-    padding: 6px 12px;
-  }
-  
-  .exploded-stack {
-    width: 95%;
-  }
+.pro-toggle.active {
+  background: rgba(0,242,255,0.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(0,242,255,0.3);
+  color: #fff;
 }
 
-/* Mobile landscape tweak */
-@media (max-height: 500px) and (orientation: landscape) {
-  .main-header { padding: 10px 20px; }
-  .main-layout { padding: 10px; }
-  .stage-area { height: 80vh; }
+/* Custom config badge */
+.custom-badge {
+  font-family: monospace;
+  font-size: 0.58rem;
+  letter-spacing: 2px;
+  color: #ff9d00;
+  border: 1px solid rgba(255,157,0,0.4);
+  padding: 3px 8px;
+  border-radius: 2px;
+  background: rgba(255,157,0,0.06);
+  text-align: center;
+  animation: pulse-badge 2s ease-in-out infinite;
 }
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; }
+}
+
+/* Scenario preset grid */
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.scenario-btn {
+  background: rgba(0,242,255,0.04);
+  border: 1px solid var(--accent-dim);
+  color: var(--text);
+  padding: 8px 4px;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: clamp(0.5rem, 0.85vw, 0.62rem);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+  border-radius: 3px;
+}
+
+.scenario-btn:hover {
+  border-color: var(--accent-glow);
+  background: rgba(0,242,255,0.10);
+}
+
+.scenario-btn.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.scenario-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.scenario-name {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  font-size: 0.58rem;
+}
+
+/* PRO controls (collapsible) */
+.pro-controls {
+  border: 1px solid rgba(0,242,255,0.15);
+  border-radius: 4px;
+  padding: 10px;
+  background: rgba(0,242,255,0.02);
+  animation: slide-down 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pro-controls-header {
+  font-family: monospace;
+  font-size: 0.58rem;
+  letter-spacing: 3px;
+  color: var(--accent);
+  opacity: 0.6;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--accent-dim);
+  padding-bottom: 6px;
+}
+
+.light-desc {
+  opacity: 0.5;
+  font-size: 0.6em;
+  letter-spacing: 1px;
+  text-transform: none;
+  font-weight: normal;
+  margin-left: 4px;
+}
+
+.zoom-level { color: var(--accent); opacity: 0.7; }
