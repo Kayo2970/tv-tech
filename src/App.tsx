@@ -224,6 +224,10 @@ const App: React.FC = () => {
 
   const angleOffset = getAngleOffset();
 
+  // --- RESET VIEW HANDLER ---
+  // Returns the 3D rotation to the neutral center point (0,0)
+  const resetView = () => setRotation({ x: 0, y: 0 });
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
     setRotation(prev => ({
@@ -274,6 +278,7 @@ const App: React.FC = () => {
           <div className="view-toggle">
             <button onClick={() => setIsMicroscope(false)} className={!isMicroscope ? 'active' : ''}>Exploded View</button>
             <button onClick={() => setIsMicroscope(true)} className={isMicroscope ? 'active' : ''}>Microscope (Subpixels)</button>
+            <button onClick={resetView} className="reset-btn">Align Center</button>
           </div>
 
           <div className="interaction-canvas" onMouseDown={() => setIsDragging(true)}>
