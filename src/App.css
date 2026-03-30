@@ -237,6 +237,29 @@ body {
   50% { opacity: 0.8; height: 100%; }
 }
 
+/* Video Positioning: Ensures the 4k video fits perfectly within the schematic panel */
+.layer-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Crops slightly if ratio doesn't match, ensuring full panel coverage */
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.microscope-bg-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 /* --- HUD CONTROL PANEL --- */
 .hud-panel {
   background: var(--panel);
