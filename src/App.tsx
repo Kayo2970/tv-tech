@@ -43,7 +43,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Excellent Contrast', 'Zero Motion Blur'],
     cons: ['Huge & Heavy', 'Flicker', 'Radiation'],
-    filters: { contrast: 1.2, brightness: 0.9, saturate: 1.1, blur: 1.5, sepia: 0.1 }
+    filters: { contrast: 1.4, brightness: 0.8, saturate: 1.2, blur: 2, sepia: 0.2 }
   },
   PLASMA: {
     id: 'PLASMA',
@@ -60,7 +60,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Great Contrast', 'Natural Motion'],
     cons: ['High Heat', 'Power Hungry', 'Burn-in'],
-    filters: { contrast: 1.3, brightness: 0.85, saturate: 1.2, blur: 0.5, sepia: 0 }
+    filters: { contrast: 1.3, brightness: 0.9, saturate: 1.3, blur: 0.5, sepia: 0 }
   },
   LCD: {
     id: 'LCD',
@@ -77,7 +77,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Bright', 'Thin', 'Cheap'],
     cons: ['Grey Blacks', 'Backlight Bleed', 'Viewing Angle Shift'],
-    filters: { contrast: 0.9, brightness: 1.1, saturate: 0.9, blur: 0, sepia: 0 }
+    filters: { contrast: 0.8, brightness: 1.2, saturate: 0.8, blur: 0, sepia: 0 }
   },
   QLED: {
     id: 'QLED',
@@ -155,17 +155,31 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
   }
 };
 
+// Main Application Component: Manages the interactive display technology explorer
 const App: React.FC = () => {
+  // State for current selected technology (e.g., CRT, OLED)
   const [tech, setTech] = useState<DisplayTech>('LCD');
+  
+  // State for 3D rotation of the exploded stack
   const [rotation, setRotation] = useState({ x: -15, y: -30 });
-  const [exploded, setExploded] = useState(0.5); // 0 to 1
+  
+  // State for the Z-axis separation between layers (0 to 1.5)
+  const [exploded, setExploded] = useState(0.5);
+  
+  // State for ambient lighting intensity (0 to 1)
   const [ambientLight, setAmbientLight] = useState(0.1);
+  
+  // Toggle between 3D Exploded View and 2D Microscope Subpixel View
   const [isMicroscope, setIsMicroscope] = useState(false);
+  
+  // State to track if the user is currently dragging the 3D canvas
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<HTMLDivElement>(null);
 
+  // Retrieve details for the currently selected technology
   const currentTech = TECH_DETAILS[tech];
 
+  // Handles 3D rotation based on mouse movement when dragging
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
     setRotation(prev => ({
@@ -185,6 +199,7 @@ const App: React.FC = () => {
       onMouseUp={() => setIsDragging(false)}
       onMouseLeave={() => setIsDragging(false)}
     >
+      {/* Visual overlay for ambient lighting simulation */}
       <div className="ambient-overlay" style={{ opacity: ambientLight }}></div>
 
       <header className="main-header">
@@ -193,8 +208,9 @@ const App: React.FC = () => {
       </header>
 
       <main className="main-layout">
-        {/* The 3D Interaction Stage */}
+        {/* The 3D Interaction Stage: Where the visual simulation happens */}
         <section className="stage-area">
+          {/* View Toggles: Switch between macro and micro views */}
           <div className="view-toggle">
             <button onClick={() => setIsMicroscope(false)} className={!isMicroscope ? 'active' : ''}>Exploded View</button>
             <button onClick={() => setIsMicroscope(true)} className={isMicroscope ? 'active' : ''}>Microscope (Subpixels)</button>
@@ -205,10 +221,29 @@ const App: React.FC = () => {
             onMouseDown={() => setIsDragging(true)}
           >
             {isMicroscope ? (
+              /* Microscope View: Shows the underlying subpixel structures */
               <div className="microscope-view">
+                {/* Background video simulated through the pixel structure */}
+                <video 
+                  src={refVideo} 
+                  autoPlay 
+                  loop 
+                  muted 
+                  className="microscope-bg-video"
+                  style={{
+                    filter: `
+                      contrast(${currentTech.filters.contrast}) 
+                      brightness(${currentTech.filters.brightness}) 
+                      saturate(${currentTech.filters.saturate}) 
+                      blur(${currentTech.filters.blur}px)
+                      sepia(${currentTech.filters.sepia})
+                    `
+                  }}
+                />
                 <div className={`pixel-grid ${currentTech.pixelPattern}`}>
                   {[...Array(30)].map((_, i) => (
                     <div key={i} className="pixel-unit">
+                      {/* Dynamic subpixel rendering based on technology pattern */}
                       <div className="sub R"></div>
                       <div className="sub G"></div>
                       {currentTech.pixelPattern === 'DIAMOND' && <div className="sub G G2"></div>}
@@ -220,6 +255,7 @@ const App: React.FC = () => {
                 <div className="zoom-overlay">30,000x ZOOM</div>
               </div>
             ) : (
+              /* Exploded View: 3D representation of the physical layer stack */
               <div 
                 className="exploded-stack"
                 style={{ 
@@ -236,6 +272,25 @@ const App: React.FC = () => {
                       border: `2px solid rgba(255, 255, 255, ${0.1 + (idx * 0.1)})`
                     }}
                   >
+                    {/* Integrated Reference Video on the top-most layer */}
+                    {idx === currentTech.layers.length - 1 && (
+                      <video 
+                        src={refVideo} 
+                        autoPlay 
+                        loop 
+                        muted 
+                        className="layer-video"
+                        style={{
+                          filter: `
+                            contrast(${currentTech.filters.contrast}) 
+                            brightness(${currentTech.filters.brightness}) 
+                            saturate(${currentTech.filters.saturate}) 
+                            blur(${currentTech.filters.blur}px)
+                            sepia(${currentTech.filters.sepia})
+                          `
+                        }}
+                      />
+                    )}
                     <div className="layer-label">
                       <h3>{layer.name}</h3>
                       <p>{layer.description}</p>
@@ -243,16 +298,19 @@ const App: React.FC = () => {
                   </div>
                 ))}
                 
-                {/* Light Ray Simulation */}
+                {/* Light Ray Simulation: Visualizes how light travels through the stack */}
                 <div className="light-path" style={{ height: `${currentTech.layers.length * 150 * exploded}px` }}></div>
               </div>
             )}
           </div>
           
           <div className="drag-hint">DRAG TO ROTATE 360°</div>
+          <div className="filter-stats-stage">
+            {currentTech.id} MODE ACTIVE
+          </div>
         </section>
 
-        {/* Control Side Panel */}
+        {/* Control Side Panel: Adjust technology and simulation parameters */}
         <aside className="control-panel">
           <section className="tech-selector">
             <label>DISPLAY TECHNOLOGY</label>
@@ -292,30 +350,6 @@ const App: React.FC = () => {
             <div className="slider-group">
               <label>ROOM LIGHTING (AMBIENT)</label>
               <input type="range" min="0" max="1" step="0.01" value={ambientLight} onChange={e => setAmbientLight(Number(e.target.value))} />
-            </div>
-          </section>
-
-          <section className="video-reference">
-            <label>REFERENCE VIDEO (Real-time Filter Simulation)</label>
-            <div className="video-container">
-              <video 
-                src={refVideo} 
-                autoPlay 
-                loop 
-                muted 
-                style={{
-                  filter: `
-                    contrast(${currentTech.filters.contrast}) 
-                    brightness(${currentTech.filters.brightness}) 
-                    saturate(${currentTech.filters.saturate}) 
-                    blur(${currentTech.filters.blur}px)
-                    sepia(${currentTech.filters.sepia})
-                  `
-                }}
-              />
-              <div className="filter-stats">
-                {currentTech.id} MODE ACTIVE
-              </div>
             </div>
           </section>
 
