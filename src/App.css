@@ -135,11 +135,11 @@ body {
   cursor: grabbing;
 }
 
-/* --- Exploded Stack: Optimizing for 16:9 TV Shape --- */
+/* --- Exploded Stack: Forced 16:9 TV Aspect Ratio --- */
 .exploded-stack {
   position: relative;
-  width: 90%;
-  max-width: 800px;
+  width: 95%;
+  max-width: 1100px;
   aspect-ratio: 16 / 9;
   transform-style: preserve-3d;
   transition: transform 0.1s ease-out;
@@ -171,7 +171,7 @@ body {
   position: absolute;
   left: -20px;
   top: 20px;
-  max-width: 200px;
+  max-width: 220px;
   pointer-events: none;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   z-index: 10;
@@ -243,8 +243,9 @@ body {
     grid-template-columns: 1fr 1fr;
   }
   .exploded-stack {
-    width: 90%;
-    height: 300px;
+    width: 95%;
+    aspect-ratio: 16 / 9; /* Ensure it stays wide even on mobile */
+    height: auto;
   }
   .layer-label {
     left: 10px;
