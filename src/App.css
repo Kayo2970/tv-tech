@@ -66,6 +66,19 @@ body {
   min-height: 0;
 }
 
+/* Widescreen 16:9 Optimization */
+@media (min-aspect-ratio: 16/9) {
+  .main-layout {
+    grid-template-columns: 1fr 450px;
+    padding: 0 60px 60px;
+    gap: 60px;
+  }
+  
+  .logo {
+    font-size: 2.2rem;
+  }
+}
+
 /* --- Stage Area --- */
 .stage-area {
   position: relative;
@@ -122,12 +135,12 @@ body {
   cursor: grabbing;
 }
 
-/* --- Exploded Stack --- */
+/* --- Exploded Stack: Optimizing for 16:9 TV Shape --- */
 .exploded-stack {
   position: relative;
-  width: 80%;
-  max-width: 600px;
-  height: 400px;
+  width: 90%;
+  max-width: 800px;
+  aspect-ratio: 16 / 9;
   transform-style: preserve-3d;
   transition: transform 0.1s ease-out;
 }
@@ -146,6 +159,7 @@ body {
   box-sizing: border-box;
   backdrop-filter: blur(2px);
   transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-radius: 4px;
 }
 
 .layer-label {
@@ -153,9 +167,9 @@ body {
   padding: 12px 18px;
   border-radius: 12px;
   border-left: 4px solid var(--accent);
-  transform: translateZ(40px);
+  transform: translateZ(60px);
   position: absolute;
-  left: -40px;
+  left: -20px;
   top: 20px;
   max-width: 200px;
   pointer-events: none;
