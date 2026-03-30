@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
+import refVideo from './assets/reference-video.webm';
 
-type DisplayTech = 'CRT' | 'PLASMA' | 'LCD' | 'QLED' | 'OLED' | 'MicroLED';
+type DisplayTech = 'CRT' | 'PLASMA' | 'LCD' | 'QLED' | 'OLED' | 'MiniLED' | 'QD_OLED' | 'MicroLED';
 
 interface Layer {
   name: string;
@@ -18,6 +19,13 @@ interface TechDetails {
   pixelPattern: 'TRIAD' | 'STRIPE' | 'DIAMOND' | 'WRGB';
   pros: string[];
   cons: string[];
+  filters: {
+    contrast: number;
+    brightness: number;
+    saturate: number;
+    blur: number;
+    sepia: number;
+  };
 }
 
 const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
@@ -34,7 +42,8 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
       { name: 'Front Glass', description: 'Thick protective glass', color: 'rgba(255, 255, 255, 0.2)', thickness: 20 },
     ],
     pros: ['Excellent Contrast', 'Zero Motion Blur'],
-    cons: ['Huge & Heavy', 'Flicker', 'Radiation']
+    cons: ['Huge & Heavy', 'Flicker', 'Radiation'],
+    filters: { contrast: 1.2, brightness: 0.9, saturate: 1.1, blur: 1.5, sepia: 0.1 }
   },
   PLASMA: {
     id: 'PLASMA',
@@ -50,7 +59,8 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
       { name: 'Front Glass', description: 'Viewing surface', color: 'rgba(255, 255, 255, 0.2)', thickness: 10 },
     ],
     pros: ['Great Contrast', 'Natural Motion'],
-    cons: ['High Heat', 'Power Hungry', 'Burn-in']
+    cons: ['High Heat', 'Power Hungry', 'Burn-in'],
+    filters: { contrast: 1.3, brightness: 0.85, saturate: 1.2, blur: 0.5, sepia: 0 }
   },
   LCD: {
     id: 'LCD',
@@ -66,7 +76,8 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
       { name: 'Front Polarizer', description: 'Blocks or allows light', color: '#444', thickness: 5 },
     ],
     pros: ['Bright', 'Thin', 'Cheap'],
-    cons: ['Grey Blacks', 'Backlight Bleed', 'Viewing Angle Shift']
+    cons: ['Grey Blacks', 'Backlight Bleed', 'Viewing Angle Shift'],
+    filters: { contrast: 0.9, brightness: 1.1, saturate: 0.9, blur: 0, sepia: 0 }
   },
   QLED: {
     id: 'QLED',
@@ -80,7 +91,8 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
       { name: 'Anti-Reflective', description: 'Glossy or Matte finish', color: 'rgba(255, 255, 255, 0.1)', thickness: 5 },
     ],
     pros: ['Vibrant Colors', 'Insanely Bright'],
-    cons: ['Still has blooming', 'Not true black']
+    cons: ['Still has blooming', 'Not true black'],
+    filters: { contrast: 1.1, brightness: 1.3, saturate: 1.5, blur: 0, sepia: 0 }
   },
   OLED: {
     id: 'OLED',
@@ -94,7 +106,8 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
       { name: 'Encapsulation', description: 'Protects from oxygen/moisture', color: 'rgba(255, 255, 255, 0.1)', thickness: 10 },
     ],
     pros: ['Infinite Contrast', 'Instant Response', 'Ultra-Thin'],
-    cons: ['Burn-in risk', 'Lower brightness', 'Organic decay']
+    cons: ['Burn-in risk', 'Lower brightness', 'Organic decay'],
+    filters: { contrast: 1.5, brightness: 1.0, saturate: 1.2, blur: 0, sepia: 0 }
   },
   MicroLED: {
     id: 'MicroLED',
@@ -107,7 +120,38 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
       { name: 'Protective Seal', description: 'Highly durable cover', color: 'rgba(255, 255, 255, 0.1)', thickness: 10 },
     ],
     pros: ['Perfect Blacks', 'No Burn-in', '10,000+ nits'],
-    cons: ['Extreme Cost', 'Impossible to mass produce']
+    cons: ['Extreme Cost', 'Impossible to mass produce'],
+    filters: { contrast: 1.6, brightness: 1.5, saturate: 1.3, blur: 0, sepia: 0 }
+  },
+  MiniLED: {
+    id: 'MiniLED',
+    name: 'Mini-LED LCD',
+    year: '2021',
+    pixelPattern: 'STRIPE',
+    layers: [
+      { name: 'Mini-LED Backlight', description: 'Thousands of tiny LED zones', color: '#fff', thickness: 20 },
+      { name: 'Quantum Dot Film', description: 'Enhances color purity', color: 'rgba(255, 0, 255, 0.2)', thickness: 10 },
+      { name: 'LCD Stack', description: 'Standard liquid crystal control', color: 'rgba(255, 255, 255, 0.1)', thickness: 25 },
+      { name: 'Front Polarizer', description: 'Final light filter', color: '#444', thickness: 5 },
+    ],
+    pros: ['High Brightness', 'Great Local Dimming', 'No Burn-in'],
+    cons: ['Still has some blooming', 'Thicker than OLED'],
+    filters: { contrast: 1.3, brightness: 1.4, saturate: 1.3, blur: 0, sepia: 0 }
+  },
+  QD_OLED: {
+    id: 'QD_OLED',
+    name: 'Quantum Dot OLED',
+    year: '2022',
+    pixelPattern: 'DIAMOND',
+    layers: [
+      { name: 'TFT Backplane', description: 'Control circuitry', color: '#111', thickness: 10 },
+      { name: 'Blue OLED Emitters', description: 'Self-emissive blue light source', color: 'rgba(0, 100, 255, 0.5)', thickness: 15 },
+      { name: 'QD Color Converters', description: 'Converts blue to pure Red/Green', color: 'linear-gradient(90deg, #f00, #0f0)', thickness: 10 },
+      { name: 'Encapsulation', description: 'Protects from oxygen/moisture', color: 'rgba(255, 255, 255, 0.1)', thickness: 5 },
+    ],
+    pros: ['Best Color Purity', 'Infinite Contrast', 'Wide Viewing Angles'],
+    cons: ['Burn-in risk', 'Expensive', 'Raised blacks in bright rooms'],
+    filters: { contrast: 1.5, brightness: 1.1, saturate: 1.8, blur: 0, sepia: 0 }
   }
 };
 
@@ -167,6 +211,7 @@ const App: React.FC = () => {
                     <div key={i} className="pixel-unit">
                       <div className="sub R"></div>
                       <div className="sub G"></div>
+                      {currentTech.pixelPattern === 'DIAMOND' && <div className="sub G G2"></div>}
                       <div className="sub B"></div>
                       {currentTech.pixelPattern === 'WRGB' && <div className="sub W"></div>}
                     </div>
@@ -247,6 +292,30 @@ const App: React.FC = () => {
             <div className="slider-group">
               <label>ROOM LIGHTING (AMBIENT)</label>
               <input type="range" min="0" max="1" step="0.01" value={ambientLight} onChange={e => setAmbientLight(Number(e.target.value))} />
+            </div>
+          </section>
+
+          <section className="video-reference">
+            <label>REFERENCE VIDEO (Real-time Filter Simulation)</label>
+            <div className="video-container">
+              <video 
+                src={refVideo} 
+                autoPlay 
+                loop 
+                muted 
+                style={{
+                  filter: `
+                    contrast(${currentTech.filters.contrast}) 
+                    brightness(${currentTech.filters.brightness}) 
+                    saturate(${currentTech.filters.saturate}) 
+                    blur(${currentTech.filters.blur}px)
+                    sepia(${currentTech.filters.sepia})
+                  `
+                }}
+              />
+              <div className="filter-stats">
+                {currentTech.id} MODE ACTIVE
+              </div>
             </div>
           </section>
 
