@@ -19,6 +19,7 @@ interface TechDetails {
   pixelPattern: 'TRIAD' | 'STRIPE' | 'DIAMOND' | 'WRGB';
   pros: string[];
   cons: string[];
+  angleShift: number; // 0 (none) to 2 (extreme shift)
   filters: {
     contrast: number;
     brightness: number;
@@ -43,6 +44,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Excellent Contrast', 'Zero Motion Blur'],
     cons: ['Huge & Heavy', 'Flicker', 'Radiation'],
+    angleShift: 0.1,
     filters: { contrast: 1.4, brightness: 0.8, saturate: 1.2, blur: 2, sepia: 0.2 }
   },
   PLASMA: {
@@ -60,6 +62,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Great Contrast', 'Natural Motion'],
     cons: ['High Heat', 'Power Hungry', 'Burn-in'],
+    angleShift: 0.1,
     filters: { contrast: 1.3, brightness: 0.9, saturate: 1.3, blur: 0.5, sepia: 0 }
   },
   LCD: {
@@ -77,6 +80,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Bright', 'Thin', 'Cheap'],
     cons: ['Grey Blacks', 'Backlight Bleed', 'Viewing Angle Shift'],
+    angleShift: 1.8,
     filters: { contrast: 0.8, brightness: 1.2, saturate: 0.8, blur: 0, sepia: 0 }
   },
   QLED: {
@@ -92,6 +96,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Vibrant Colors', 'Insanely Bright'],
     cons: ['Still has blooming', 'Not true black'],
+    angleShift: 1.4,
     filters: { contrast: 1.1, brightness: 1.3, saturate: 1.5, blur: 0, sepia: 0 }
   },
   OLED: {
@@ -107,6 +112,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Infinite Contrast', 'Instant Response', 'Ultra-Thin'],
     cons: ['Burn-in risk', 'Lower brightness', 'Organic decay'],
+    angleShift: 0.05,
     filters: { contrast: 1.5, brightness: 1.0, saturate: 1.2, blur: 0, sepia: 0 }
   },
   MicroLED: {
@@ -121,6 +127,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Perfect Blacks', 'No Burn-in', '10,000+ nits'],
     cons: ['Extreme Cost', 'Impossible to mass produce'],
+    angleShift: 0.05,
     filters: { contrast: 1.6, brightness: 1.5, saturate: 1.3, blur: 0, sepia: 0 }
   },
   MiniLED: {
@@ -136,6 +143,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['High Brightness', 'Great Local Dimming', 'No Burn-in'],
     cons: ['Still has some blooming', 'Thicker than OLED'],
+    angleShift: 1.5,
     filters: { contrast: 1.3, brightness: 1.4, saturate: 1.3, blur: 0, sepia: 0 }
   },
   QD_OLED: {
@@ -151,6 +159,7 @@ const TECH_DETAILS: Record<DisplayTech, TechDetails> = {
     ],
     pros: ['Best Color Purity', 'Infinite Contrast', 'Wide Viewing Angles'],
     cons: ['Burn-in risk', 'Expensive', 'Raised blacks in bright rooms'],
+    angleShift: 0.02,
     filters: { contrast: 1.5, brightness: 1.1, saturate: 1.8, blur: 0, sepia: 0 }
   }
 };
@@ -178,6 +187,16 @@ const App: React.FC = () => {
 
   // Retrieve details for the currently selected technology
   const currentTech = TECH_DETAILS[tech];
+
+  // --- ANGLE SHIFT CALCULATION ---
+  // Calculates how much the current viewing angle deviates from 0,0
+  const getAngleOffset = () => {
+    const deviation = Math.sqrt(Math.pow(rotation.x, 2) + Math.pow(rotation.y, 2));
+    // Normalize deviation to a factor that affects filters
+    return Math.min(deviation / 90, 1) * currentTech.angleShift;
+  };
+
+  const angleOffset = getAngleOffset();
 
   // Handles 3D rotation based on mouse movement when dragging
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -282,12 +301,13 @@ const App: React.FC = () => {
                         className="layer-video"
                         style={{
                           filter: `
-                            contrast(${currentTech.filters.contrast}) 
-                            brightness(${currentTech.filters.brightness}) 
-                            saturate(${currentTech.filters.saturate}) 
+                            contrast(${currentTech.filters.contrast - (angleOffset * 0.5)}) 
+                            brightness(${currentTech.filters.brightness + (angleOffset * 0.3)}) 
+                            saturate(${currentTech.filters.saturate - angleOffset}) 
                             blur(${currentTech.filters.blur}px)
                             sepia(${currentTech.filters.sepia})
-                          `
+                          `,
+                          opacity: 1 - (angleOffset * 0.2)
                         }}
                       />
                     )}
@@ -306,7 +326,8 @@ const App: React.FC = () => {
           
           <div className="drag-hint">DRAG TO ROTATE 360°</div>
           <div className="filter-stats-stage">
-            {currentTech.id} MODE ACTIVE
+            {currentTech.id} MODE ACTIVE 
+            {angleOffset > 0.1 && <span className="angle-warning"> (ANGLE SHIFT DETECTED)</span>}
           </div>
         </section>
 

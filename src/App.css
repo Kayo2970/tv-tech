@@ -502,8 +502,20 @@ body {
   border-radius: 8px;
   letter-spacing: 1px;
   box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+  transition: all 0.3s ease;
 }
 
+.angle-warning {
+  color: #ff3333;
+  text-shadow: 0 0 5px rgba(255, 51, 51, 0.5);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.5; }
+}
+
+/* Range Input Styling: Customizes the appearance of sliders in the control panel */
 input[type="range"] {
   width: 100%;
   accent-color: var(--accent);
@@ -512,6 +524,7 @@ input[type="range"] {
   border-radius: 3px;
 }
 
+/* Physics Note: Small disclaimer at the bottom of the control panel */
 .physics-note {
   font-size: 0.7rem;
   opacity: 0.3;
@@ -519,6 +532,7 @@ input[type="range"] {
   font-style: italic;
 }
 
+/* Drag Hint: Animated instruction at the bottom of the stage area */
 .drag-hint {
   position: absolute;
   bottom: 20px;
