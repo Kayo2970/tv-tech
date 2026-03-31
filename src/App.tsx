@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './App.css';
-import refVideo from './assets/reference-video.webm';
-import img1 from './assets/IMG.jpg';
-import img2 from './assets/IMG 2.jpg';
+
+// Serve large media from public/ for progressive streaming (not bundled)
+const refVideo = '/reference-video.webm';
+const img1     = '/IMG.jpg';
+const img2     = '/IMG 2.jpg';
 
 // ----------------------------------------------------------------
 // TYPES
@@ -226,6 +228,22 @@ const App: React.FC = () => {
   const lastTouchRef    = useRef<{ x: number; y: number } | null>(null);
   const lastPinchDistRef= useRef<number | null>(null);
   const stageRef        = useRef<HTMLDivElement>(null);
+  const videoRef1       = useRef<HTMLVideoElement>(null);
+  const videoRef2       = useRef<HTMLVideoElement>(null);
+
+  // Programmatic play (browsers block autoPlay unless muted + user gesture)
+  const tryPlay = useCallback((el: HTMLVideoElement | null) => {
+    if (!el) return;
+    el.play().catch(() => { /* autoplay blocked — user will see poster */ });
+  }, []);
+
+  // Re-trigger play whenever tech or mediaSource changes
+  useEffect(() => {
+    if (mediaSource === 'VIDEO') {
+      tryPlay(videoRef1.current);
+      tryPlay(videoRef2.current);
+    }
+  }, [tech, mediaSource, tryPlay]);
 
   // Measure stage for pixel-accurate 3D dimensions
   useEffect(() => {
@@ -399,7 +417,11 @@ const App: React.FC = () => {
               <div className="microscope-view">
                 {mediaSource === 'VIDEO' ? (
                   <video
-                    src={refVideo} autoPlay loop muted
+                    ref={videoRef1}
+                    src={refVideo}
+                    autoPlay loop muted playsInline
+                    preload="auto"
+                    onCanPlay={e => tryPlay(e.currentTarget)}
                     className="microscope-bg-video"
                     style={{ filter: lightFX.displayFilter }}
                   />
@@ -454,7 +476,11 @@ const App: React.FC = () => {
                     {idx === currentTech.layers.length - 1 && (
                       mediaSource === 'VIDEO' ? (
                         <video
-                          src={refVideo} autoPlay loop muted
+                          ref={videoRef2}
+                          src={refVideo}
+                          autoPlay loop muted playsInline
+                          preload="auto"
+                          onCanPlay={e => tryPlay(e.currentTarget)}
                           className="layer-video"
                           style={{ filter: lightFX.displayFilter, opacity: 1 - angleOffset * 0.2 }}
                         />
